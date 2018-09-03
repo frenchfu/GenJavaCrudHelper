@@ -89,6 +89,9 @@ public class FileToObjectService {
 				}
 				
 			}
+		
+		System.out.println(resultObj.getDbTypeClassMapping());
+		System.out.println(resultObj.getDbTypeClassMapping());
 	
 		if(hasDefaultSetting) {
 			return resultObj;
