@@ -1,5 +1,7 @@
 package tw.com.softleader.frnech.fu.GenJavaHelper.model;
 
+import org.apache.poi.util.StringUtil;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -28,5 +30,11 @@ public class ColumnDetail {
 	private String sample;
 	private String define;
 	private String desc2;
+	
+	public boolean getIsPk() {
+		String pkVar = pk;
+		if(pkVar == null)pkVar ="";
+		return pkVar.contains("PK");
+	}
 
 }

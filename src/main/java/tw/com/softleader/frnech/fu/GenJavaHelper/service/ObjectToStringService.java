@@ -1,14 +1,11 @@
 package tw.com.softleader.frnech.fu.GenJavaHelper.service;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import com.google.common.collect.Maps;
 
@@ -413,7 +410,7 @@ public class ObjectToStringService {
 		}
 		//SET METHOD PART FOR VO need loop
 		for( ColumnDetail columnItem : tableDetail.getColumnDetails()){
-			if(!columnItem.getPk().contains("PK")) 
+			if(!StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) 
 				voSb.append(getColumnVoSetPartStr(settingFromOds , columnItem));
 		}		
 		voSb.append(NEWLINE);
@@ -439,7 +436,7 @@ public class ObjectToStringService {
 		//SET METHOD PART FOR VO need loop
 		//SET METHOD PART FOR VO need loop
 		for( ColumnDetail columnItem : tableDetail.getColumnDetails()){
-			if(columnItem.getPk().contains("PK")) 
+			if(StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) 
 				identitySb.append(getColumnVoSetPartStr(settingFromOds , columnItem));
 		}
 		identitySb.append(NEWLINE);
@@ -464,18 +461,24 @@ public class ObjectToStringService {
 		String importPartStr = "";
 		String classInformationPartStr = "";
 		String annotationPartStr = "";
+		String annotationPartForIdentityStr = "";
 		String embeddedIdPartStr = "";
 		String className = getJavaNameFromTableName2(tableDetail.getTableName(),IS_ENTITY);
 		String identityOverridePartStr ="";
+		String constructPartStr ="";
+		String constructPartIdentityStr = "";
 		String identityClassName = className + "Identity";
 	
 		
 		//partString Logic
-		annotationPartStr = getAnnotationPartStr(tableDetail,className);
+		annotationPartStr = getAnnotationPartStr(tableDetail,className,true);
+		annotationPartForIdentityStr = getAnnotationPartStr(tableDetail,className,false);
 		importPartStr = getImportPartStr(settingFromOds,tableDetail,className);
 		classInformationPartStr = getClassInformationPartStr(tableDetail);
 		identityOverridePartStr = getIdentityOverridePartStr(tableDetail,identityClassName);
 		embeddedIdPartStr = getEmbeddedIdPartStr(tableDetail,identityClassName);
+		constructPartStr = getconstructPartStr(tableDetail, className, identityClassName);
+		constructPartIdentityStr = getConstructPartIdentityStr(settingFromOds , tableDetail, className, identityClassName);
 		
 		
 		//Apend str Logic entity part
@@ -489,6 +492,7 @@ public class ObjectToStringService {
 		entitySb.append("@ApiModel(value = \"").append(className).append("\", description = \"").append(tableDetail.getTableLocalName()).append("\" )").append(NEWLINE);
 		entitySb.append("public class ").append(className).append(" {").append(NEWLINE)
 		.append(NEWLINE)
+		.append(constructPartStr)
 		.append(embeddedIdPartStr)
 		.append(NEWLINE);
 		for( ColumnDetail columnItem : tableDetail.getColumnDetails()){
@@ -505,7 +509,7 @@ public class ObjectToStringService {
 		.append(NEWLINE)
 		.append(importPartStr)//import
 		.append(NEWLINE)
-		.append(annotationPartStr)
+		.append(annotationPartForIdentityStr)
 		.append("@Embeddable").append(NEWLINE)
 		.append("public class ").append(identityClassName).append(" implements Serializable {").append(NEWLINE);
 		for( ColumnDetail columnItem : tableDetail.getColumnDetails()){
@@ -524,6 +528,48 @@ public class ObjectToStringService {
 		return resultMap;
 	}
 
+	private String getConstructPartIdentityStr(SettingFromOds settingFromOds, TableDetail tableDetail, String className, String identityClassName) {
+		//init
+		StringBuffer resultSb = new StringBuffer();
+		String identityClassNameLowerFirstCharStr = identityClassName.substring(0, 1).toLowerCase() + identityClassName.substring(1);
+		String pointStr = "";
+		
+		resultSb.append(TAB).append("public").append(" ").append(identityClassName).append("(");
+		for(ColumnDetail columnItem : tableDetail.getColumnDetails()) {
+			if(columnItem.getIsPk()) {
+				String classType = getColumnClassType(settingFromOds, columnItem);
+				String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
+				resultSb.append(classType).append(" ").append(javaColumnName).append(pointStr).append(" ");
+				pointStr = ",";
+			}
+		}	
+		resultSb.append(") {").append(NEWLINE);
+		for(ColumnDetail columnItem : tableDetail.getColumnDetails()) {
+			if(columnItem.getIsPk()) {
+				String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
+				resultSb.append(TAB).append(TAB).append("this.").append(javaColumnName).append(" = ").append(javaColumnName).append(";").append(NEWLINE);
+			}
+		}
+		resultSb.append(TAB).append("}").append(NEWLINE).append(NEWLINE);
+
+		
+		return resultSb.toString();
+	}
+	
+
+	private String getconstructPartStr(TableDetail tableDetail, String className, String identityClassName) {
+		//init
+		StringBuffer resultSb = new StringBuffer();
+		String identityClassNameLowerFirstCharStr = identityClassName.substring(0, 1).toLowerCase() + identityClassName.substring(1);
+		
+		resultSb.append(TAB).append("public").append(" ").append(className).append("(").append(identityClassName).append(" ").append(identityClassNameLowerFirstCharStr).append(") {").append(NEWLINE)
+		.append(TAB).append(TAB).append("this.").append(identityClassNameLowerFirstCharStr).append(" = ").append(identityClassNameLowerFirstCharStr).append(";").append(NEWLINE)
+		.append(TAB).append("}").append(NEWLINE).append(NEWLINE);
+		resultSb.append(TAB).append("public").append(" ").append(className).append("() {};").append(NEWLINE).append(NEWLINE);
+		
+		return resultSb.toString();
+	}
+
 	private String getEmbeddedIdPartStr(TableDetail tableDetail, String identityClassName) {
 		//init
 		String identityClassNameLowerFirstCharStr = identityClassName.substring(0, 1).toLowerCase() + identityClassName.substring(1);
@@ -540,7 +586,7 @@ public class ObjectToStringService {
 		String identityClassNameLowerFirstCharStr = identityClassName.substring(0, 1).toLowerCase() + identityClassName.substring(1);
 		
 		StringBuffer resultSb = new StringBuffer();
-		resultSb.append(TAB).append("private ").append(identityClassName).append(" ").append(identityClassNameLowerFirstCharStr).append("Vo;").append(NEWLINE);
+		resultSb.append(TAB).append("private ").append(identityClassName).append(" ").append(identityClassNameLowerFirstCharStr).append(";").append(NEWLINE);
 		
 		return resultSb.toString();
 	}
@@ -554,7 +600,7 @@ public class ObjectToStringService {
 		String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
 		String columnDesc = getColumnDescStr(columnItem);
 		
-		if(!columnItem.getPk().contains("PK")) {
+		if(!StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) {
 			
 			resultSb.append(TAB).append("/**").append(NEWLINE);
 			resultSb.append(columnDesc);
@@ -589,7 +635,7 @@ public class ObjectToStringService {
 		String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
 		String columnDesc = getColumnDescStr(columnItem);
 		
-		if(!columnItem.getPk().contains("PK")) {
+		if(!StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) {
 			
 			resultSb.append(TAB).append("/**").append(NEWLINE);
 			resultSb.append(columnDesc);
@@ -694,7 +740,7 @@ public class ObjectToStringService {
 		String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
 		String columnDesc = getColumnDescStr(columnItem);
 		
-		if(columnItem.getPk().contains("PK")) {
+		if(StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) {
 			
 			resultSb.append(TAB).append("/**").append(NEWLINE);
 			resultSb.append(columnDesc);
@@ -721,7 +767,7 @@ public class ObjectToStringService {
 		String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
 		String columnDesc = getColumnDescStr(columnItem);
 		
-		if(columnItem.getPk().contains("PK")) {
+		if(StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) {
 			
 			resultSb.append(TAB).append("/**").append(NEWLINE);
 			resultSb.append(columnDesc);
@@ -813,11 +859,12 @@ public class ObjectToStringService {
 	private String getColumnClassType(SettingFromOds settingFromOds, ColumnDetail columnItem) {
 		StringBuffer resultSb = new StringBuffer();
 		String type = columnItem.getDataType();
+
 		int index1 = type.indexOf("(");
 		if(index1 > 0) {
-			type = type.substring(0,index1-1);
+			type = type.substring(0,index1);
 		}
-		
+
 		if(settingFromOds.getDbTypeClassMapping().get(type) !=null ) {
 			resultSb.append(settingFromOds.getDbTypeClassMapping().get(type));
 		}else if(columnTypeclassMappingMap.get(type) !=null ) {
@@ -913,17 +960,18 @@ public class ObjectToStringService {
 	
 	
 
-	private String getAnnotationPartStr(TableDetail tableDetail, String className) {
+	private String getAnnotationPartStr(TableDetail tableDetail, String className , Boolean isEntity) {
 		StringBuffer resultSb = new StringBuffer();
 		
 		resultSb.append("@SuppressWarnings(\"serial\")").append(NEWLINE);
 		resultSb.append("@Getter").append(NEWLINE);
 		resultSb.append("@Setter").append(NEWLINE);
-		resultSb.append("@Entity").append(NEWLINE);
+		
 		resultSb.append("@ToString").append(NEWLINE);
-		resultSb.append("@Table(name = \"").append(tableDetail.getTableName()).append("\")").append(NEWLINE);
-		
-		
+		if(isEntity) {
+			resultSb.append("@Table(name = \"").append(tableDetail.getTableName()).append("\")").append(NEWLINE);		
+			resultSb.append("@Entity").append(NEWLINE);
+		}
 		return resultSb.toString();
 	}
 	
@@ -949,6 +997,7 @@ public class ObjectToStringService {
 		resultSb.append("import java.io.Serializable;").append(NEWLINE);
 		resultSb.append("import javax.persistence.Embeddable;").append(NEWLINE);
 		resultSb.append("import javax.persistence.Column;").append(NEWLINE);
+		resultSb.append("import javax.persistence.Id;").append(NEWLINE);
 		resultSb.append("import javax.persistence.EmbeddedId;").append(NEWLINE);
 		resultSb.append("import javax.persistence.Entity;").append(NEWLINE);
 		resultSb.append("import javax.persistence.Table;").append(NEWLINE);
