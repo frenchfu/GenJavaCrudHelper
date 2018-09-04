@@ -15,6 +15,7 @@ public class BeanHump {
 	
 	//转变的依赖字符
 	public static final char UNDERLINE='_';
+	public static final char MIDDLELINE='-';
 	
 	/**
 	 * 将驼峰转换成"_"(userId:user_id)

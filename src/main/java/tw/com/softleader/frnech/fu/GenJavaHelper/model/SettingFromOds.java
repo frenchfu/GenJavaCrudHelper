@@ -26,6 +26,9 @@ public class SettingFromOds {
 	private String packageToService;
 	private String packageToEntity;
 	private String packageToVo;
+	private String packageToRpc;
+	private String controllerRequestMapping;
+	private String controllerName;
 	private YesNo makeInterFaceService;
 	private Map<String,String> dbTypeClassMapping = Maps.newHashMap();
 	

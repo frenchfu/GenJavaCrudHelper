@@ -38,7 +38,11 @@ public class ObjectToStringService {
 	
 	public static Map<String,String> columnTypeclassMappingMap = Maps.newHashMap();
 	
-	
+	/**
+	 *  
+	 *  for Entire System CRUD CODE entiyt ~ dao ~ service ~ controlle
+	 * 
+	 */
 	public Map<String, String> scanObjListToJavaCodeMap(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
 
 		//init
@@ -49,16 +53,217 @@ public class ObjectToStringService {
 			Map<String, String> loopUnitMap = this.genObjToJavaCodeMap(settingFromOds,tableDetail);
 			resultMap.putAll(loopUnitMap);
 			
-		}	
+		}
+		
+		Map<String,String> webControllerCodeMap = this.genWebControllerCodeForAllTable(settingFromOds, tableDetailObjList);
+		resultMap.putAll(webControllerCodeMap);
 		
 		return resultMap;
 	
 	}
 	
+	//**produce A controller contain all table save update code
+	public Map<String, String> genWebControllerCodeForAllTable(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		
+		//init
+		Map<String , String > resultMap = Maps.newHashMap();
+		StringBuffer codeSb = new StringBuffer();
+		String packageStr = "";
+		String controlleImportdStr = "";
+		String commentStr ="";
+		String annotationStr ="";
+		String publicClassPartStr="";
+		String urlPartStr="";
+		String autowiredPartStr="";
+		String methodPartStr= "" ;
+		String endPartSrt = "";
+		
+		
+		
+		//package
+		packageStr = "package " + settingFromOds.getPackageToRpc() + ";";
+		
+		//import
+		controlleImportdStr = this.getControlleImportStr(settingFromOds, tableDetailObjList);
+		
+		//comment part
+		commentStr = getWebControllerCommentPartStr(settingFromOds, tableDetailObjList);
+		
+		//annotation part
+		annotationStr = new StringBuffer().append("@Slf4j").append(NEWLINE)
+				.append("@RestController").append(NEWLINE)
+				.append("@RequestMapping(\"").append(settingFromOds.getControllerRequestMapping()).append("\")").append(NEWLINE).toString();
+		
+		//publicClassPart
+		publicClassPartStr = new StringBuffer().append("public class ").append(settingFromOds.getControllerName()).append(" {").append(NEWLINE).toString();
+		
+		//urlPartStr
+		urlPartStr = getWebControllerUrlPartStr(settingFromOds, tableDetailObjList);
+		
+		//autowired
+		autowiredPartStr = getWebControllerAutowiredPartStr(settingFromOds, tableDetailObjList);
+		
+		//method
+		methodPartStr = getWebControllerMethodPartStr(settingFromOds, tableDetailObjList);
+		
+		//endPart
+		endPartSrt = new StringBuffer(";").append(NEWLINE).toString();
+		
+		
+		//combine
+		codeSb.append(packageStr).append(NEWLINE);
+		codeSb.append(controlleImportdStr).append(NEWLINE);
+		codeSb.append(commentStr).append(NEWLINE);
+		codeSb.append(annotationStr).append(NEWLINE);
+		codeSb.append(publicClassPartStr).append(NEWLINE);//public class
+		codeSb.append(urlPartStr).append(NEWLINE);
+		codeSb.append(autowiredPartStr).append(NEWLINE);
+		codeSb.append(endPartSrt).append(NEWLINE);//combine end
+		
+		//put key & Code Stirng
+		
+		
+		//return
+		return resultMap;
+		
+	}
+
+	private String getWebControllerMethodPartStr(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		
+		//init
+		StringBuffer resultSb = new StringBuffer();
+		
+		//loop
+		tableDetailObjList.forEach(t -> {
+			
+			resultSb.append(getWebControllerGetMethodStrFromTable(t)).append(NEWLINE);
+			resultSb.append(getWebControllerInsertMethodStrFromTable(t)).append(NEWLINE);
+			
+			
+		});
+		return resultSb.toString();
+	}
+
+	//Web Inert Method
+	private String getWebControllerInsertMethodStrFromTable(TableDetail tableDetail) {
+		StringBuffer resultSb = new StringBuffer();
+		String className = getJavaNameFromTableName2(tableDetail.getTableName(),IS_ENTITY);
+		String methodName = "insert"+className;
+		String serviceName = BeanHump.underlineToCamel2(tableDetail.getTableName()) + "Service";
+		String getIdentityMethodNameStr = methodName + "Identity()";
+		
+		resultSb.append(TAB).append("/** insert  post  ").append(className).append(" */").append(NEWLINE);
+		resultSb.append(TAB).append("@PostMapping(CRUD_").append(tableDetail.getTableName().toUpperCase()).append(")").append(NEWLINE);
+		
+		resultSb.append(TAB).append("public ResponseEntity<ResponseDetails<").append(className).append(">> ").append(methodName).append("(@RequestBody  ")
+		.append(className).append(" ").append(" requestObj").append(") {").append(NEWLINE);
+		
+		resultSb.append(TAB).append(TAB).append("try {").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append("// start log").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append("log.info(\"===").append(methodName).append(" : \");").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append("log.info(requestObj.toString());").append(NEWLINE);
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append("//init").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append(className).append(" resultObj = null;").append(NEWLINE);
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append("//insert").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append("resultObj = ").append(serviceName).append(".save(requestObj);").append(NEWLINE);
+		resultSb.append(NEWLINE);
+		
+
+		resultSb.append(TAB).append(TAB).append(TAB).append("// end log");
+		resultSb.append(TAB).append(TAB).append(TAB).append("log.info(\"getAoPlyedrPrem ==========DATA_NOT_FOUND\");").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append("return Responses.status(JasmineResponseStatus.DATA_NOT_FOUND).build();").append(NEWLINE);
+
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("// end log");
+		resultSb.append(TAB).append(TAB).append("log.info(\"").append(methodName).append(" result:\" + requestObj.toString());");
+		resultSb.append(TAB).append(TAB).append("log.info(\"getAoPlyedrPrem ==========End\");");
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("// return");
+		resultSb.append(TAB).append(TAB).append("return Responses.ok(new ResponseDetails<").append(className).append(">().data(resultObj));");
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append("}").append(NEWLINE);
+		return resultSb.toString();
+	}
+
+	//** WEB GET METHOD */
+	private String getWebControllerGetMethodStrFromTable(TableDetail tableDetail) {
+		StringBuffer resultSb = new StringBuffer();
+		String className = getJavaNameFromTableName2(tableDetail.getTableName(),IS_ENTITY);
+		String methodName = "get"+className;
+		String serviceName = BeanHump.underlineToCamel2(tableDetail.getTableName()) + "Service";
+		String getIdentityMethodNameStr = methodName + "Identity()";
+		
+		resultSb.append(TAB).append("/** get ").append(className).append(" */").append(NEWLINE);
+		resultSb.append(TAB).append("@GetMapping(CRUD_").append(tableDetail.getTableName().toUpperCase()).append(")").append(NEWLINE);
+		
+		resultSb.append(TAB).append("public ResponseEntity<ResponseDetails<").append(className).append(">> ").append(methodName).append("(@RequestBody  ")
+		.append(className).append(" ").append(" requestObj").append(") {").append(NEWLINE);
+		
+		resultSb.append(TAB).append(TAB).append("// start log").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("log.info(\"===").append(methodName).append(" : \");").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("log.info(requestObj.toString());").append(NEWLINE);
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("//init").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(className).append(" resultObj = null;").append(NEWLINE);
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("//get").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("resultObj = ").append(serviceName).append(".getOne(requestObj.").append(getIdentityMethodNameStr).append(");").append(NEWLINE);
+		resultSb.append(NEWLINE);
+		
+		resultSb.append(TAB).append(TAB).append("if(resultObj == null) {").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append("log.info(\"getAoPlyedrPrem ==========DATA_NOT_FOUND\");").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append(TAB).append("return Responses.status(JasmineResponseStatus.DATA_NOT_FOUND).build();").append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("}");
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("// end log");
+		resultSb.append(TAB).append(TAB).append("log.info(\"").append(methodName).append(" result:\" + requestObj.toString());");
+		resultSb.append(TAB).append(TAB).append("log.info(\"getAoPlyedrPrem ==========End\");");
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append(TAB).append("// return");
+		resultSb.append(TAB).append(TAB).append("return Responses.ok(new ResponseDetails<").append(className).append(">().data(resultObj));");
+		resultSb.append(NEWLINE);
+		resultSb.append(TAB).append("}").append(NEWLINE);
+		return resultSb.toString();
+		
+	}
+
+	private String getControlleImportStr(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		
+		//init
+		StringBuffer resultSb = new StringBuffer();
+		
+		//service
+		resultSb.append("import ").append(settingFromOds.getPackageToService()).append(".*;").append(NEWLINE);
+		//entity
+		resultSb.append("import ").append(settingFromOds.getPackageToEntity()).append(".*;").append(NEWLINE);
+		
+		//common part
+		resultSb.append("import org.springframework.beans.factory.annotation.Autowired;").append(NEWLINE);
+		resultSb.append("import org.springframework.http.ResponseEntity;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.PostMapping;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.RequestBody;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.RequestMapping;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.RestController;").append(NEWLINE);
+		
+		//soft leader Part
+		resultSb.append("import lombok.extern.slf4j.Slf4j;").append(NEWLINE);
+		resultSb.append("import tw.com.softleader.web.http.Responses;").append(NEWLINE);
+		
+		return resultSb.toString();
+	}
+
+	/**
+	 *  
+	 *  for Only produce VO
+	 * 
+	 */
 	public Map<String, String> scanObjListToJavaCodeMapForVo(SettingFromOds settingFromOds,List<TableDetail> tableDetailObjList) {
 		//init
 		Map<String, String> resultMap = Maps.newHashMap();
 		
+		//loop
 		for(TableDetail  tableDetail : tableDetailObjList) {
 			Map<String, String> loopUnitMap = this.genObjToVoJavaCodeMap(settingFromOds,tableDetail);
 			resultMap.putAll(loopUnitMap);				
@@ -141,9 +346,7 @@ public class ObjectToStringService {
 		return resultSb.toString();
 		
 	}
-
-
-
+	
 	private String genJavaDaoStrCodeFromTableOnj(SettingFromOds settingFromOds, TableDetail tableDetail) {
 	
 		StringBuffer resultSb = new StringBuffer();
@@ -533,8 +736,53 @@ public class ObjectToStringService {
 		return resultSb.toString();
 	}
 	
+	private String getWebControllerUrlPartStr(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		
+		//init
+		StringBuffer resultSb = new StringBuffer();
+		resultSb.append(TAB).append("//URL ").append(NEWLINE);
+		
+		//loop
+		tableDetailObjList.forEach(t->{
+			//public static final String CRUD_AO_PLYEDR_PREM = "/ao-plyedr-prem/crud";
+			String tableCrudUrlName = getTableCrudUrlName(t.getTableName());
+			resultSb.append(TAB).append("public static final String  CRUD_").append(t.getTableName().toUpperCase())
+			.append(" = \"/").append(tableCrudUrlName).append("/crud/\";").append(NEWLINE);
+		});
+		
+		return resultSb.toString();
+		
+	}
+	
+	private String getWebControllerAutowiredPartStr(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		
+		// init
+		StringBuffer resultSb = new StringBuffer();
+		resultSb.append(TAB).append("//Autowired Service").append(NEWLINE);
+
+		// loop
+		tableDetailObjList.forEach(t -> {
+			String[] tableServiceName = getTableServiceNameArray(t.getTableName());
+			resultSb.append(TAB).append("@Autowired ").append(tableServiceName[0]).append(" ").append(tableServiceName[1]).append(";").append(NEWLINE);
+		});
+
+		return resultSb.toString();
+	}
 	
 
+	// [0] is first word upcase , [1] is normal Name;
+	private String[] getTableServiceNameArray(String tableName) {
+		String[] resultStrArray = new String[2];
+		String serviceClassName = getJavaNameFromTableName2(tableName,IS_SERVICE);
+		resultStrArray[0] = serviceClassName.substring(0, 1).toUpperCase() + serviceClassName.substring(1);
+		resultStrArray[1] = serviceClassName;
+		return resultStrArray;
+	}
+
+	private String getTableCrudUrlName(String tableName) {
+		String resultStr = tableName.replace("_", "-").toLowerCase();
+		return resultStr;	
+	}
 
 	private String getColumnDescStr(ColumnDetail columnItem) {
 		StringBuffer resultSb = new StringBuffer();
@@ -758,5 +1006,20 @@ public class ObjectToStringService {
 		return resultSb.toString();
 	}
 	
+	private String getWebControllerCommentPartStr(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		
+		String AUTHOR = "@author French.Fu";//TODO MOVE TO PROPERTY				
+		StringBuffer resultSb = new StringBuffer();
+		resultSb.append("/** ").append(NEWLINE);
+		resultSb.append("*").append(AUTHOR).append("<br/>").append(NEWLINE);
+		resultSb.append("*").append("crud controller for the following entity ").append("<br/>").append(NEWLINE);
+		tableDetailObjList.forEach(t->{
+			String javaEntityName = BeanHump.underlineToCamel2(t.getTableName().toLowerCase());
+			resultSb.append("*").append(javaEntityName).append("<br/>").append(NEWLINE);
+		});
+		resultSb.append("*/ ").append(NEWLINE);
+		return resultSb.toString();
+		
+	}
 	
 }
