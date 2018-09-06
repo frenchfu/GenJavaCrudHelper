@@ -476,7 +476,7 @@ public class ObjectToStringService {
 		}
 		//SET METHOD PART FOR VO need loop
 		for( ColumnDetail columnItem : tableDetail.getColumnDetails()){
-			if(!StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) 
+			if(!columnItem.getIsPk()) 
 				voSb.append(getColumnVoSetPartStr(settingFromOds , columnItem));
 		}		
 		voSb.append(NEWLINE);
@@ -502,7 +502,7 @@ public class ObjectToStringService {
 		//SET METHOD PART FOR VO need loop
 		//SET METHOD PART FOR VO need loop
 		for( ColumnDetail columnItem : tableDetail.getColumnDetails()){
-			if(StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) 
+			if(columnItem.getIsPk()) 
 				identitySb.append(getColumnVoSetPartStr(settingFromOds , columnItem));
 		}
 		identitySb.append(NEWLINE);
@@ -666,7 +666,7 @@ public class ObjectToStringService {
 		String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
 		String columnDesc = getColumnDescStr(columnItem);
 		
-		if(!StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) {
+		if(!columnItem.getIsPk()) {
 			
 			resultSb.append(TAB).append("/**").append(NEWLINE);
 			resultSb.append(columnDesc);
@@ -701,7 +701,7 @@ public class ObjectToStringService {
 		String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
 		String columnDesc = getColumnDescStr(columnItem);
 		
-		if(!StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) {
+		if(!columnItem.getIsPk()) {
 			
 			resultSb.append(TAB).append("/**").append(NEWLINE);
 			resultSb.append(columnDesc);
@@ -761,7 +761,7 @@ public class ObjectToStringService {
 		resultSb.append(TAB).append(TAB).append(identityClassName).append(" that = (").append(identityClassName).append(") o;").append(NEWLINE)
 		.append(NEWLINE);
 		//loop for pk 
-		List<ColumnDetail> pkcolumnDetails = tableDetail.getColumnDetails().stream().filter(c-> !StringUtils.isEmpty(c.getPk()) && c.getPk().contains("PK"))
+		List<ColumnDetail> pkcolumnDetails = tableDetail.getColumnDetails().stream().filter(c-> !StringUtils.isEmpty(c.getPk()) && c.getIsPk())
 		.collect(Collectors.toList());
 		for(int i = 0 ;  i < pkcolumnDetails.size() ; i++) {
 			ColumnDetail pkColumn = pkcolumnDetails.get(i);
@@ -806,7 +806,7 @@ public class ObjectToStringService {
 		String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
 		String columnDesc = getColumnDescStr(columnItem);
 		
-		if(StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) {
+		if(columnItem.getIsPk()) {
 			
 			resultSb.append(TAB).append("/**").append(NEWLINE);
 			resultSb.append(columnDesc);
@@ -833,7 +833,7 @@ public class ObjectToStringService {
 		String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
 		String columnDesc = getColumnDescStr(columnItem);
 		
-		if(StringUtils.trimToEmpty(columnItem.getPk()).contains("PK")) {
+		if(columnItem.getIsPk()) {
 			
 			resultSb.append(TAB).append("/**").append(NEWLINE);
 			resultSb.append(columnDesc);
@@ -927,6 +927,10 @@ public class ObjectToStringService {
 			resultSb.append(TAB).append("*").append("desc1:").append(columnItem.getDesc1().replace("\r", " ").replace("\n", " ")).append("<br/>").append(NEWLINE);
 		if(!StringUtils.isEmpty(columnItem.getDesc2()))
 			resultSb.append(TAB).append("*").append("desc2:").append(columnItem.getDesc2().replace("\r", " ").replace("\n", " ")).append("<br/>").append(NEWLINE);
+		if(!StringUtils.isEmpty(columnItem.getDesc3()))
+			resultSb.append(TAB).append("*").append("desc3:").append(columnItem.getDesc3().replace("\r", " ").replace("\n", " ")).append("<br/>").append(NEWLINE);
+		if(!StringUtils.isEmpty(columnItem.getDesc4()))
+			resultSb.append(TAB).append("*").append("desc4:").append(columnItem.getDesc4().replace("\r", " ").replace("\n", " ")).append("<br/>").append(NEWLINE);
 		if(!StringUtils.isEmpty(columnItem.getDefine()))
 			resultSb.append(TAB).append("*").append("define:").append(columnItem.getDefine().replace("\r", " ").replace("\n", " ")).append("<br/>").append(NEWLINE);
 		if(!StringUtils.isEmpty(columnItem.getSample()))

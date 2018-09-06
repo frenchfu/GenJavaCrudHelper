@@ -26,15 +26,17 @@ public class ColumnDetail {
 	private String pk;
 	private String defaultValue;
 	private String notNull;
-	private String desc1;
 	private String sample;
 	private String define;
+	private String desc1;
 	private String desc2;
+	private String desc3;
+	private String desc4;
 	
 	public boolean getIsPk() {
 		String pkVar = pk;
 		if(pkVar == null)pkVar ="";
-		return pkVar.contains("PK");
+		return pkVar.contains("PK") || pkVar.contains("UK");
 	}
 
 }
