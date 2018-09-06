@@ -29,6 +29,9 @@ public class SettingFromOds {
 	private String packageToRpc;
 	private String controllerRequestMapping;
 	private String controllerName;
+	private String packageToStub;
+	private String rpcName;
+	private String stubName;
 	private YesNo makeInterFaceService;
 	private Map<String,String> dbTypeClassMapping = Maps.newHashMap();
 	

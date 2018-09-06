@@ -42,6 +42,7 @@ public class ObjectToStringService {
 	public static String WEB_CONTROLLER_INSERT_METHOD_TEMPLETE_FILENAME = "webControllerInsertMethodTemplete.txt";
 	public static String WEB_CONTROLLER_UPDATE_METHOD_TEMPLETE_FILENAME = "webControllerUpdateMethodTemplete.txt";
 	public static String WEB_CONTROLLER_DELETE_METHOD_TEMPLETE_FILENAME = "webControllerDeleteMethodTemplete.txt";
+	public static String WEB_STUB_METHOD_TEMPLETE_FILENAME = "stubCrudMethodTemplete.txt";
 	public static String CRUD_SERVICE_TEMPLETE_FILENAME = "crudServiceTemplete.txt";
 
 	
@@ -153,6 +154,43 @@ public class ObjectToStringService {
 				e.printStackTrace();
 			}
 		});
+		return resultSb.toString();
+	}
+	
+	private String getStubMethodPartStr(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		
+		//init
+		StringBuffer resultSb = new StringBuffer();
+		
+		//loop
+		tableDetailObjList.forEach(t -> {
+			try {
+				resultSb.append(getStubMethodPartStrFromTable(t)).append(NEWLINE).append(NEWLINE);
+			}catch ( Exception e) {
+				e.printStackTrace();
+			}
+		});
+		return resultSb.toString();
+	}
+
+	private String getStubMethodPartStrFromTable(TableDetail tableDetail) throws IOException {
+		// init
+		StringBuffer resultSb = new StringBuffer();
+
+		// define
+		String entityClassName = getJavaNameFromTableName2(tableDetail.getTableName(), IS_ENTITY);
+		String tableName = tableDetail.getTableName();
+		String serviceClassName2 = BeanHump.underlineToCamel2(tableDetail.getTableName().toLowerCase()) + "Service";
+		String templete = FrenchFileUtils
+				.loadFileToStirng(TEMPLETE_FOLDER_PATH + WEB_STUB_METHOD_TEMPLETE_FILENAME);
+
+		// get map
+		Map<String, String> keyValueMap = Maps.newHashMap();
+		keyValueMap.put("${entityClassName}", entityClassName);
+		keyValueMap.put("${tableName}", tableName);
+
+		resultSb.append(FrenchTempleteUtils.templeteReplaceByKeyValueMapLogic(templete, keyValueMap));
+
 		return resultSb.toString();
 	}
 
@@ -821,7 +859,25 @@ public class ObjectToStringService {
 			//public static final String CRUD_AO_PLYEDR_PREM = "/ao-plyedr-prem/crud";
 			String tableCrudUrlName = getTableCrudUrlName(t.getTableName());
 			resultSb.append(TAB).append("public static final String  CRUD_").append(t.getTableName().toUpperCase())
-			.append(" = \"/").append(tableCrudUrlName).append("/crud/\";").append(NEWLINE);
+			.append(" = \"/").append(tableCrudUrlName).append("/\";").append(NEWLINE);
+		});
+		
+		return resultSb.toString();
+		
+	}
+	
+	private String getStubUrlPartStr(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		
+		//init
+		StringBuffer resultSb = new StringBuffer();
+		resultSb.append(TAB).append("//URL ").append(NEWLINE);
+		
+		//loop TODO URL DYMNDIC
+		tableDetailObjList.forEach(t->{
+			//public static final String CRUD_AO_PLYEDR_PREM = "/ao-plyedr-prem/crud";
+			String tableCrudUrlName = getTableCrudUrlName(t.getTableName());
+			resultSb.append(TAB).append("public static final String  CRUD_").append(t.getTableName().toUpperCase())
+			.append(" = \"/integration/finance/crud/").append(tableCrudUrlName).append("/\";").append(NEWLINE);
 		});
 		
 		return resultSb.toString();
@@ -1097,6 +1153,120 @@ public class ObjectToStringService {
 		resultSb.append("*/ ").append(NEWLINE);
 		return resultSb.toString();
 		
+	}
+	
+	private String getStubCommentPartStr(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		
+		String AUTHOR = "@author French.Fu";//TODO MOVE TO PROPERTY				
+		StringBuffer resultSb = new StringBuffer();
+		resultSb.append("/** ").append(NEWLINE);
+		resultSb.append("*").append(AUTHOR).append("<br/>").append(NEWLINE);
+		resultSb.append("*").append("crud stub for the following entity ").append("<br/>").append(NEWLINE);
+		tableDetailObjList.forEach(t->{
+			String javaEntityName = BeanHump.underlineToCamel2(t.getTableName().toLowerCase());
+			resultSb.append("*").append(javaEntityName).append("<br/>").append(NEWLINE);
+		});
+		resultSb.append("*/ ").append(NEWLINE);
+		return resultSb.toString();
+		
+	}
+
+	public Map<String, String> scanObjListToJavaCodeForGateWay(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		//init
+		Map<String, String> resultMap = Maps.newHashMap();
+		
+		//loop For VO
+		for(TableDetail  tableDetail : tableDetailObjList) {
+			Map<String, String> loopUnitMap = this.genObjToVoJavaCodeMap(settingFromOds,tableDetail);
+			resultMap.putAll(loopUnitMap);				
+		}
+		
+		resultMap.putAll(this.getStubJavaCodeMap(settingFromOds,tableDetailObjList));
+		
+		
+		return resultMap;
+	}
+
+	private Map<String, String> getStubJavaCodeMap(SettingFromOds settingFromOds,List<TableDetail> tableDetailObjList) {
+		
+		//init
+		Map<String , String > resultMap = Maps.newHashMap();
+		StringBuffer codeSb = new StringBuffer();
+		String packageStr = "";
+		String importStr = "";
+		String commentStr ="";
+		String annotationStr ="";
+		String publicClassPartStr="";
+		String urlPartStr="";
+		String methodPartStr= "" ;
+		String endPartSrt = "";
+		
+		//package
+		packageStr = "package " + settingFromOds.getPackageToStub() + ";" + NEWLINE;
+		
+		//import
+		importStr = this.getStubImportStr(settingFromOds, tableDetailObjList);
+		
+		//comment
+		commentStr = this.getStubCommentPartStr(settingFromOds, tableDetailObjList);
+		
+		//annotationStr
+		annotationStr = "@FeignClient(\""+settingFromOds.getRpcName()+"\")";
+		
+		//publicClassPart
+		publicClassPartStr = new StringBuffer().append("public interface ").append(settingFromOds.getStubName()).append(" {").append(NEWLINE).toString();
+		
+		//url
+		urlPartStr = getStubUrlPartStr(settingFromOds, tableDetailObjList);
+		
+		//methodPartStr part
+		methodPartStr = getStubMethodPartStr(settingFromOds, tableDetailObjList);
+		
+		//end
+		endPartSrt = "}";
+		
+		//combine
+		codeSb.append(packageStr).append(NEWLINE);
+		codeSb.append(importStr).append(NEWLINE);
+		codeSb.append(commentStr).append(NEWLINE);
+		codeSb.append(annotationStr).append(NEWLINE);
+		codeSb.append(publicClassPartStr).append(NEWLINE);
+		codeSb.append(urlPartStr).append(NEWLINE);
+		codeSb.append(methodPartStr).append(NEWLINE);
+		codeSb.append(endPartSrt).append(NEWLINE);//combine end
+		
+		//put key & Code Stirng
+		resultMap.put(settingFromOds.getPackageToStub().replace(".", "/") +"/" + settingFromOds.getStubName() +".java" , codeSb.toString());
+		
+		return resultMap;
+	}
+
+	private String getStubImportStr(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+		//init
+		StringBuffer resultSb = new StringBuffer();
+		
+		//vo
+		resultSb.append("import ").append(settingFromOds.getPackageToVo()).append(".*;").append(NEWLINE);
+	
+		//common part
+		resultSb.append("import org.springframework.cloud.netflix.feign.FeignClient;").append(NEWLINE);
+		resultSb.append("import org.springframework.beans.factory.annotation.Autowired;").append(NEWLINE);
+		resultSb.append("import org.springframework.http.ResponseEntity;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.PostMapping;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.GetMapping;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.DeleteMapping;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.PutMapping;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.RequestBody;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.RequestMapping;").append(NEWLINE);
+		resultSb.append("import org.springframework.web.bind.annotation.RestController;").append(NEWLINE);
+		
+		//soft leader Part
+		resultSb.append("import lombok.extern.slf4j.Slf4j;").append(NEWLINE);
+		resultSb.append("import tw.com.softleader.jasmine.commons.http.JasmineResponseStatus;").append(NEWLINE);
+		resultSb.append("import tw.com.softleader.web.http.ResponseDetails;").append(NEWLINE);
+		resultSb.append("import tw.com.softleader.web.http.Responses;").append(NEWLINE);
+		
+		return resultSb.toString();
 	}
 
 }

@@ -74,7 +74,8 @@ public class TableExcelGenJavaCodeBs {
 			
 			
 			Map<String,String> javaCodeMapForIntegration = mainBs.getObjectToStringService().scanObjListToJavaCodeMap(settingFromOds , tableDetailObjList);
-			Map<String,String> javaCodeMapForGateWay = mainBs.getObjectToStringService().scanObjListToJavaCodeMapForVo(settingFromOds , tableDetailObjList);
+			Map<String,String> javaCodeMapForGateWay = mainBs.getObjectToStringService().scanObjListToJavaCodeForGateWay(settingFromOds , tableDetailObjList);
+			//Map<String,String> javaCodeMapForGateWay = mainBs.getObjectToStringService().scanObjListToJavaCodeMapForVo(settingFromOds , tableDetailObjList);
 			
 			
 			
