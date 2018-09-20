@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 
 import tw.com.softleader.frnech.fu.GenJavaHelper.common.utils.BeanHump;
 import tw.com.softleader.frnech.fu.GenJavaHelper.common.utils.FrenchFileUtils;
+import tw.com.softleader.frnech.fu.GenJavaHelper.common.utils.FrenchMappingValueRuleUtil;
 import tw.com.softleader.frnech.fu.GenJavaHelper.common.utils.FrenchTempleteUtils;
 import tw.com.softleader.frnech.fu.GenJavaHelper.model.ColumnDetail;
 import tw.com.softleader.frnech.fu.GenJavaHelper.model.SettingFromOds;
@@ -27,6 +28,7 @@ public class ObjectToStringService {
 
 	private final String IS_MODEL = "IS_MODEL";
 	private final String IS_VO = "IS_VO";
+	private final String IS_VO_SERVICE = "IS_VO_SERVICE";
 	private final String IS_MODEL_IDENTITY = "IS_MODEL_IDENTITY";
 	private final String IS_IDENTITY_VO = "IS_VO_IDENTITY";
 	private final String IS_ENTITY = "IS_ENTITY";
@@ -44,6 +46,7 @@ public class ObjectToStringService {
 	public static String WEB_CONTROLLER_DELETE_METHOD_TEMPLETE_FILENAME = "webControllerDeleteMethodTemplete.txt";
 	public static String WEB_STUB_METHOD_TEMPLETE_FILENAME = "stubCrudMethodTemplete.txt";
 	public static String CRUD_SERVICE_TEMPLETE_FILENAME = "crudServiceTemplete.txt";
+	public static String GATEWAY_SETTING_VO_VALUE_SERVICE_TEMPLETE_FILENAME = "mappingServiceTemplete.txt";
 
 	
 	/**
@@ -343,7 +346,13 @@ public class ObjectToStringService {
 		resultMap.putAll((this.genJavaVoCodeFromTableOnj(settingFromOds,tableDetail)));
 		return resultMap;
 	}
+	
 
+	private Map<String, String> genObjToGateWayServiceJavaCodeMap(SettingFromOds settingFromOds,TableDetail tableDetail) throws IOException {
+		Map<String, String> resultMap = Maps.newHashMap();
+		resultMap.putAll((this.genJavaGateServiceCodeFromTableOnj(settingFromOds, tableDetail)));
+		return resultMap;
+	}
 
 	private Map<String, String> genObjToJavaCodeMap(SettingFromOds settingFromOds, TableDetail tableDetail) throws IOException {
 		
@@ -437,6 +446,47 @@ public class ObjectToStringService {
 		resultSb.append("}");
 		return resultSb.toString();
 
+	}
+	
+	private Map<String, String> genJavaGateServiceCodeFromTableOnj(SettingFromOds settingFromOds,TableDetail tableDetail) throws IOException {
+		// init
+		Map<String, String> resultMap = Maps.newHashMap();
+		StringBuffer gateWayServiceSb = new StringBuffer();
+		
+		
+		// define
+		String voClassName = getJavaNameFromTableName2(tableDetail.getTableName(), IS_VO);
+		String settingValuePart = getGateServiceSettingValuePart(tableDetail);
+		String identityVoClassName = getJavaNameFromTableName2(tableDetail.getTableName(), IS_IDENTITY_VO);
+		String templete = FrenchFileUtils.loadFileToStirng(TEMPLETE_FOLDER_PATH + GATEWAY_SETTING_VO_VALUE_SERVICE_TEMPLETE_FILENAME);
+
+		// get map
+		Map<String, String> keyValueMap = Maps.newHashMap();
+		keyValueMap.put("${voClassName}", voClassName);
+		keyValueMap.put("${settingValuePart}", settingValuePart);
+		keyValueMap.put("${identityVoClassName}", identityVoClassName);
+		
+		gateWayServiceSb.append(FrenchTempleteUtils.templeteReplaceByKeyValueMapLogic(templete, keyValueMap));
+
+		resultMap.put(settingFromOds.getPackageToGateWayService().replace(".", "/") + "/"
+				+ getJavaNameFromTableName(tableDetail.getTableName(), IS_VO_SERVICE), gateWayServiceSb.toString());
+
+		return resultMap;
+	}
+	
+
+	private String getGateServiceSettingValuePart(TableDetail tableDetail) {
+		
+		//init
+		StringBuffer resultSb = new StringBuffer();
+		System.out.println("tableDetail.getTableName()"+tableDetail.getTableName());
+		for(ColumnDetail columnDetail :  tableDetail.getColumnDetails()) {
+			System.out.println(columnDetail.getColumnName());
+			String mappingValueUnitStr = FrenchMappingValueRuleUtil.getMappingValueUnitStr(columnDetail);
+			resultSb.append(TAB).append(TAB).append(mappingValueUnitStr).append(NEWLINE);
+		}		
+		return resultSb.toString();
+		
 	}
 
 	private Map<String,String> genJavaVoCodeFromTableOnj(SettingFromOds settingFromOds, TableDetail tableDetail) {
@@ -981,6 +1031,11 @@ public class ObjectToStringService {
 		case IS_SERVICE:
 			appendName = "Service";
 			break;
+		case IS_VO:
+			appendName = "Vo";
+			break;
+		case IS_IDENTITY_VO:
+			appendName = "IdentityVo";
 		default:
 			break;
 		}
@@ -1018,6 +1073,9 @@ public class ObjectToStringService {
 			break;
 		case IS_VO:
 			appendName = "Vo.java";
+			break;
+		case IS_VO_SERVICE:
+			appendName = "VoService.java";
 			break;
 		case IS_IDENTITY_VO:
 			appendName = "IdentityVo.java";
@@ -1128,6 +1186,23 @@ public class ObjectToStringService {
 		return resultSb.toString();
 	}
 	
+	private String getImportPartStrForGateWayService(SettingFromOds settingFromOds, TableDetail tableDetail, String className) {
+		
+		StringBuffer resultSb = new StringBuffer();
+		
+		//defaultPart
+		resultSb.append("import tw.com.softleader.jasmine.integration.bs.IntegrationMappingBs;").append(NEWLINE);
+		resultSb.append("import tw.com.softleader.jasmine.integration.bs.IntegrationUtilBs;").append(NEWLINE);		
+		resultSb.append("import tw.com.softleader.jasmine.integration.finance.universe.UniverseObj;").append(NEWLINE);		
+		resultSb.append("import lombok.extern.slf4j.Slf4j;");
+		resultSb.append("import java.io.Serializable;").append(NEWLINE);
+		resultSb.append("import org.springframework.beans.factory.annotation.Autowired;").append(NEWLINE);
+		resultSb.append("import org.springframework.stereotype.Service;").append(NEWLINE);
+		resultSb.append("import ").append(settingFromOds.getPackageToVo()).append(".identity.").append(className).append("IdentityVo;").append(NEWLINE);	
+		
+		return resultSb.toString();
+	}
+	
 	
 	
 
@@ -1175,14 +1250,16 @@ public class ObjectToStringService {
 		
 	}
 
-	public Map<String, String> scanObjListToJavaCodeForGateWay(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) {
+	public Map<String, String> scanObjListToJavaCodeForGateWay(SettingFromOds settingFromOds, List<TableDetail> tableDetailObjList) throws IOException {
 		//init
 		Map<String, String> resultMap = Maps.newHashMap();
 		
 		//loop For VO
 		for(TableDetail  tableDetail : tableDetailObjList) {
-			Map<String, String> loopUnitMap = this.genObjToVoJavaCodeMap(settingFromOds,tableDetail);
-			resultMap.putAll(loopUnitMap);				
+			Map<String, String> loopUnitVoMap = this.genObjToVoJavaCodeMap(settingFromOds,tableDetail);
+			Map<String, String> loopUnitServiceMap = this.genObjToGateWayServiceJavaCodeMap(settingFromOds,tableDetail);
+			resultMap.putAll(loopUnitVoMap);
+			resultMap.putAll(loopUnitServiceMap);
 		}
 		
 		resultMap.putAll(this.getStubJavaCodeMap(settingFromOds,tableDetailObjList));

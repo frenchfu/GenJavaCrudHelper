@@ -27,9 +27,10 @@ public class SettingFromOds {
 	private String packageToEntity;
 	private String packageToVo;
 	private String packageToRpc;
+	private String packageToGateWayService;
+	private String packageToStub;
 	private String controllerRequestMapping;
 	private String controllerName;
-	private String packageToStub;
 	private String rpcName;
 	private String stubName;
 	private YesNo makeInterFaceService;

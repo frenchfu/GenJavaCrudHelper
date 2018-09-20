@@ -1,7 +1,5 @@
 package tw.com.softleader.frnech.fu.GenJavaHelper.model;
 
-import org.apache.poi.util.StringUtil;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -32,6 +30,7 @@ public class ColumnDetail {
 	private String desc2;
 	private String desc3;
 	private String desc4;
+	private String setValueLogic;
 	
 	public boolean getIsPk() {
 		String pkVar = pk;
