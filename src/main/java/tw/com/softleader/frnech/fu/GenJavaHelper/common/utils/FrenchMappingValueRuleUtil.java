@@ -14,10 +14,9 @@ public class FrenchMappingValueRuleUtil {
 	public static void main (String[] test ) {
 		
 		ColumnDetail columnDetail = new ColumnDetail ();
-		columnDetail.setPk("");
+		columnDetail.setPk("UK");
 		columnDetail.setColumnName("this_is_my_column");
-		columnDetail.setSetValueLogic("utilBs.formatDateByPattren(\"MMYY\",QotPolicyRiskPayInfo.creditCardExpDate)");//expect univerVo.getQotPolicyRiskPayInfo().getCreditCardCheckNo()
-		
+		columnDetail.setSetValueLogic("utilBs.sumPolicyTWDPeriodPremiumWithWeightRatio(policyFinanceData,mappingBs.getWeightRatioByPosPolicyData(posPolicyData))");//expect univerVo.getQotPolicyRiskPayInfo().getCreditCardCheckNo()
 		System.out.println(getMappingValueUnitStr(columnDetail));
 		
 	}
@@ -28,6 +27,8 @@ public class FrenchMappingValueRuleUtil {
 	final static String  ZERO  = "BigDecimal.ZERO";
 	final static String  NULL2  = "";
 	final static String  NULL3  = null;
+	final static String  UN_SURE  = null;
+	
 	
 
 	public static String getMappingValueUnitStr(ColumnDetail columnDetail) {		
@@ -89,7 +90,7 @@ public class FrenchMappingValueRuleUtil {
 
 	private static String isUtilBsMethodRule(String setValueLogic) {		
 		StringBuffer resultSb = new StringBuffer();
-		if(setValueLogic.contains("utilBs.")) {//utilBs.sumQotPolicyRiskItemBypolicyRiskId(QotPolicyRiskPayInfo)
+		if(setValueLogic.startsWith("utilBs.")) {//utilBs.sumQotPolicyRiskItemBypolicyRiskId(QotPolicyRiskPayInfo)
 			int index = setValueLogic.indexOf("(");
 			resultSb.append(setValueLogic.substring(0, index));
 			String s = setValueLogic.substring(index+1,setValueLogic.length() - 1 ); //QotPolicyRiskPayInfo
@@ -99,6 +100,7 @@ public class FrenchMappingValueRuleUtil {
 			for(String str :  i) {
 				String commonDefaultValue = isSelfDefaultStr(str);
 				commonDefaultValue += isCommonDefaultValue(str);
+				commonDefaultValue += isMappingBsMethodRule(str);
 				if(commonDefaultValue.length()>0) {
 					resultSb.append(pointer).append(commonDefaultValue);
 				}else {
@@ -113,7 +115,7 @@ public class FrenchMappingValueRuleUtil {
 
 	private static String isMappingBsMethodRule(String setValueLogic) {
 		StringBuffer resultSb = new StringBuffer();
-		if(setValueLogic.contains("mappingBs.")) {//utilBs.sumQotPolicyRiskItemBypolicyRiskId(QotPolicyRiskPayInfo)
+		if(setValueLogic.startsWith("mappingBs.")) {//utilBs.sumQotPolicyRiskItemBypolicyRiskId(QotPolicyRiskPayInfo)
 			int index = setValueLogic.indexOf("(");
 			resultSb.append(setValueLogic.substring(0, index));
 			String s = setValueLogic.substring(index+1,setValueLogic.length() - 1 ); //QotPolicyRiskPayInfo
@@ -123,6 +125,7 @@ public class FrenchMappingValueRuleUtil {
 			for(String str :  i) {
 				String commonDefaultValue = isSelfDefaultStr(str);
 				commonDefaultValue += isCommonDefaultValue(str);
+				commonDefaultValue += isUtilBsMethodRule(str);
 				if(commonDefaultValue.length()>0) {
 					resultSb.append(pointer).append(commonDefaultValue);
 				}else {
@@ -138,6 +141,9 @@ public class FrenchMappingValueRuleUtil {
 	private static String  isCommonDefaultValue(String setValueLogic) {
 		StringBuffer resultSb = new StringBuffer();
 		switch (setValueLogic) {
+		case "ZERO":
+			resultSb.append(ZERO);
+			break;
 		case "EMPTY_STR":
 			resultSb.append(EMPTY_STR);
 			break;
@@ -149,6 +155,12 @@ public class FrenchMappingValueRuleUtil {
 			break;
 		case "SYSTEM_DAY":
 			resultSb.append(SYSTEM_DAY);
+			break;
+		case "UN_SURE":
+			resultSb.append(UN_SURE);
+			break;
+		case "?":
+			resultSb.append(UN_SURE);
 			break;
 		default:
 			if(setValueLogic == null) {
