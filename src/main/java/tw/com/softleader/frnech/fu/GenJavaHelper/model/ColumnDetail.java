@@ -31,6 +31,7 @@ public class ColumnDetail {
 	private String desc3;
 	private String desc4;
 	private String setValueLogic;
+	private String lenghth;
 	
 	public boolean getIsPk() {
 		String pkVar = pk;

@@ -458,6 +458,7 @@ public class ObjectToStringService {
 		String voClassName = getJavaNameFromTableName2(tableDetail.getTableName(), IS_VO);
 		String settingValuePart = getGateServiceSettingValuePart(tableDetail);
 		String identityVoClassName = getJavaNameFromTableName2(tableDetail.getTableName(), IS_IDENTITY_VO);
+		String identityVoName = getJavaNameFromTableName2(tableDetail.getTableName(), IS_IDENTITY);
 		String templete = FrenchFileUtils.loadFileToStirng(TEMPLETE_FOLDER_PATH + GATEWAY_SETTING_VO_VALUE_SERVICE_TEMPLETE_FILENAME);
 
 		// get map
@@ -465,6 +466,7 @@ public class ObjectToStringService {
 		keyValueMap.put("${voClassName}", voClassName);
 		keyValueMap.put("${settingValuePart}", settingValuePart);
 		keyValueMap.put("${identityVoClassName}", identityVoClassName);
+		keyValueMap.put("${identityVoName}", identityVoName);
 		
 		gateWayServiceSb.append(FrenchTempleteUtils.templeteReplaceByKeyValueMapLogic(templete, keyValueMap));
 
@@ -517,7 +519,7 @@ public class ObjectToStringService {
 		.append(NEWLINE)
 		.append(classInformationPartStr)//class Information Part
 		.append(annotationPartStr);
-		voSb.append("public class ").append(className).append("Vo {").append(NEWLINE)
+		voSb.append("public class ").append(className).append("Vo implements Serializable {").append(NEWLINE)
 		.append(NEWLINE)
 		.append(embeddedIdPartStr)
 		.append(NEWLINE);
@@ -606,7 +608,7 @@ public class ObjectToStringService {
 		.append(annotationPartStr)
 		.append(classInformationPartStr);//class Information Part
 		entitySb.append("@ApiModel(value = \"").append(className).append("\", description = \"").append(tableDetail.getTableLocalName()).append("\" )").append(NEWLINE);
-		entitySb.append("public class ").append(className).append(" {").append(NEWLINE)
+		entitySb.append("public class ").append(className).append(" implements Serializable{").append(NEWLINE)
 		.append(NEWLINE)
 		.append(constructPartStr)
 		.append(embeddedIdPartStr)
@@ -699,7 +701,7 @@ public class ObjectToStringService {
 
 	private String getEmbeddedIdPartStrForVo(TableDetail tableDetail, String identityClassName) {
 		//init
-		String identityClassNameLowerFirstCharStr = identityClassName.substring(0, 1).toLowerCase() + identityClassName.substring(1);
+		String identityClassNameLowerFirstCharStr = identityClassName.substring(0, 1).toLowerCase() + identityClassName.substring(1,identityClassName.length() - 2);
 		
 		StringBuffer resultSb = new StringBuffer();
 		resultSb.append(TAB).append("private ").append(identityClassName).append(" ").append(identityClassNameLowerFirstCharStr).append(";").append(NEWLINE);
@@ -711,30 +713,37 @@ public class ObjectToStringService {
 		
 		//init
 		StringBuffer resultSb = new StringBuffer();
-		Integer columnLength = getColumnLength(columnItem.getDataType());
+		Integer columnLength = StringUtils.isEmpty(columnItem.getLenghth())?getColumnLength(columnItem.getDataType()):new Integer(columnItem.getLenghth());
 		String classType = getColumnClassType(settingFromOds, columnItem);
 		String javaColumnName = BeanHump.underlineToCamel2(columnItem.getColumnName().toLowerCase());
 		String columnDesc = getColumnDescStr(columnItem);
+		boolean isJpa = StringUtils.isEmpty(settingFromOds.getActionType()) || "jpa".equals(settingFromOds.getActionType());
 		
 		if(!columnItem.getIsPk()) {
 			
 			resultSb.append(TAB).append("/**").append(NEWLINE);
 			resultSb.append(columnDesc);
 			resultSb.append(TAB).append("*/").append(NEWLINE);
-			if(columnItem.getNotNull().contains("V")) {
-				resultSb.append(TAB).append("@NotNull").append(NEWLINE);
-				if(columnLength != null) {
-					resultSb.append(TAB).append("@Size(min =1, max = ").append(columnLength).append(")").append(NEWLINE);
+			if(isJpa) {
+				if(columnItem.getNotNull().contains("V")) {
+					resultSb.append(TAB).append("@NotNull").append(NEWLINE);
+					if(columnLength != null) {
+						resultSb.append(TAB).append("@Size(min =1, max = ").append(columnLength).append(")").append(NEWLINE);
+					}
+					
 				}
-				
+				if(classType.equals("java.time.LocalDateTime")) {
+					resultSb.append(TAB).append("@Convert(converter = LocalDateTimeConverter.class)").append(NEWLINE);;
+				}
+
+				resultSb.append(TAB).append("@Column(name=\"").append(columnItem.getColumnName())
+				.append("\" ");
+				if(columnLength != null) {
+					resultSb.append(", length=").append(columnLength);
+				}
+				resultSb.append(", columnDefinition=\"").append(columnItem.getDataType()).append("\"")
+				.append(")").append(NEWLINE);
 			}
-			resultSb.append(TAB).append("@Column(name=\"").append(columnItem.getColumnName())
-			.append("\" ");
-			if(columnLength != null) {
-				resultSb.append(", length=").append(columnLength);
-			}
-			resultSb.append(", columnDefinition=\"").append(columnItem.getDataType()).append("\"")
-			.append(")").append(NEWLINE);
 			resultSb.append(TAB).append("private ").append(classType).append(" ").append(javaColumnName).append(";").append(NEWLINE).append(NEWLINE);
 			
 			
@@ -987,7 +996,9 @@ public class ObjectToStringService {
 			resultSb.append(TAB).append("*").append("sample:").append(columnItem.getSample().replace("\r", " ").replace("\n", " ")).append("<br/>").append(NEWLINE);
 		if(!StringUtils.isEmpty(columnItem.getDefaultValue()))
 			resultSb.append(TAB).append("*").append("defaultValue:").append(columnItem.getDefaultValue().replace("\r", " ").replace("\n", " ")).append("<br/>").append(NEWLINE);
-		
+		if(!StringUtils.isEmpty(columnItem.getLenghth())) {
+			resultSb.append(TAB).append("*").append("length:").append(columnItem.getLenghth().replace("\r", " ").replace("\n", " ")).append("<br/>").append(NEWLINE);
+		}
 		
 		return resultSb.toString();
 	}
@@ -1036,6 +1047,10 @@ public class ObjectToStringService {
 			break;
 		case IS_IDENTITY_VO:
 			appendName = "IdentityVo";
+			break;
+		case IS_IDENTITY:
+			appendName = "Identity";
+			break;
 		default:
 			break;
 		}
@@ -1158,6 +1173,9 @@ public class ObjectToStringService {
 		resultSb.append("import java.time.LocalDateTime;").append(NEWLINE);
 		resultSb.append("import java.util.List;").append(NEWLINE);
 		resultSb.append("import java.util.Map;").append(NEWLINE);
+		resultSb.append("import tw.com.softleader.jasmine.integration.finance.converter.LocalDateTimeConverter;").append(NEWLINE);
+		resultSb.append("import javax.persistence.Convert;").append(NEWLINE);
+		
 		
 		resultSb.append("import ").append(settingFromOds.getPackageToEntity()).append(".identity.").append(className).append("Identity;").append(NEWLINE);	
 		

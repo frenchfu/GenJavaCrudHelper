@@ -34,6 +34,8 @@ public class SettingFromOds {
 	private String rpcName;
 	private String stubName;
 	private YesNo makeInterFaceService;
+	private String actionType;//myBatis / jpa
 	private Map<String,String> dbTypeClassMapping = Maps.newHashMap();
+	
 	
 }

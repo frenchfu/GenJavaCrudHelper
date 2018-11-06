@@ -23,8 +23,8 @@ public class ${voClassName}Service {
 		log.info("setiingValueTo${voClassName}  start");
 		log.info("universeObj: "+universeObj.toString());
 		if(vo == null) vo = new ${voClassName}();
-		if(vo.get${identityVoClassName}()== null)vo.set${identityVoClassName}(new ${identityVoClassName}());
-		${identityVoClassName} identityVo = vo.get${identityVoClassName}();
+		if(vo.get${identityVoName}()== null)vo.set${identityVoName}(new ${identityVoClassName}());
+		${identityVoClassName} identityVo = vo.get${identityVoName}();
 		
 ${settingValuePart}
 		
