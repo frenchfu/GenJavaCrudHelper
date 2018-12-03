@@ -16,7 +16,7 @@ public class FrenchMappingValueRuleUtil {
 		ColumnDetail columnDetail = new ColumnDetail ();
 		columnDetail.setPk("UK");
 		columnDetail.setColumnName("this_is_my_column");
-		columnDetail.setSetValueLogic("utilBs.sumPolicyTWDPeriodPremiumWithWeightRatio(policyFinanceData,mappingBs.getWeightRatioByPosPolicyData(posPolicyData))");//expect univerVo.getQotPolicyRiskPayInfo().getCreditCardCheckNo()
+		columnDetail.setSetValueLogic("utilBs.sumPolicyTWDPeriodPremiumWithWeightRatio(vo,identityVo.aoPlyedrPremIdentity)");//expect univerVo.getQotPolicyRiskPayInfo().getCreditCardCheckNo()
 		System.out.println(getMappingValueUnitStr(columnDetail));
 		
 	}
@@ -71,9 +71,24 @@ public class FrenchMappingValueRuleUtil {
 		int count = 0;
 		for(String s :  i) {
 			if(count == 0) {
-				resultSb.append("universeObj.get");
+				if("vo".equals(s)) {
+					if(i.size() == 0) {
+						resultSb.append("vo.get");
+					}else {
+						resultSb.append("vo");
+					}
+				}else if("identityVo".equals(s)){
+					if(i.size() == 0) {
+						resultSb.append("identityVo.get");
+					}else {
+						resultSb.append("identityVo");
+					}
+				}else {
+					resultSb.append("universeObj.get");
+					resultSb.append(s.substring(0,1).toUpperCase()).append(s.substring(1)).append("()");
+				}				
 				System.out.println(s);
-				resultSb.append(s.substring(0,1).toUpperCase()).append(s.substring(1)).append("()");
+				
 			}else {
 				if(s.length() >3 && s.substring(0,3).equals("get")) {
 					resultSb.append(".").append(s);
