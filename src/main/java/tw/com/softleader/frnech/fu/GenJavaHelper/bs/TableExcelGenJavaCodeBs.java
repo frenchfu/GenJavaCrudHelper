@@ -51,7 +51,8 @@ public class TableExcelGenJavaCodeBs {
 	}
 
 	public static void main(String[] args) throws Exception {
-		InputStream inputStrem = new FileInputStream("C:\\gitbox\\ZFjasme\\softleader-jasmine-integration-rpc\\docs\\integration\\ahIntegrationGenTable.ods");
+		String filePath = "C:\\gitbox\\jasmine\\softleader-jasmine-integration-rpc\\docs\\integration\\ahIntegrationGenTable.ods";
+		InputStream inputStrem = new FileInputStream(filePath);
 		//InputStream inputStrem = new FileInputStream("C:\\gitbox\\fbg\\softleader-gardenia-integration-rpc\\docs\\fbgGenTable.ods");
 		
 		//step 0 TODO init default setting
@@ -70,7 +71,7 @@ public class TableExcelGenJavaCodeBs {
 		
 			SettingFromOds settingFromOds= mainBs.getfileToObjectService().scanOdtToSettingObj(inputStrem);
 			inputStrem.close();
-			inputStrem = new FileInputStream("C:\\gitbox\\ZFjasme\\softleader-jasmine-integration-rpc\\docs\\integration\\ahIntegrationGenTable.ods");
+			inputStrem = new FileInputStream(filePath);
 			//inputStrem = new FileInputStream("C:\\gitbox\\fbg\\softleader-gardenia-integration-rpc\\docs\\fbgGenTable.ods");
 
 			

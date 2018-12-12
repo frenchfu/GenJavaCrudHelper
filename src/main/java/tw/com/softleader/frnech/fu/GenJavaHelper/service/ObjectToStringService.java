@@ -827,10 +827,11 @@ public class ObjectToStringService {
 			String javaColumnName = BeanHump.underlineToCamel2(pkColumn.getColumnName().toLowerCase());
 			if(i<pkcolumnDetails.size()-1) {
 				resultSb.append(TAB).append(TAB).append("if (").append(javaColumnName).append(" != null ? !").append(javaColumnName)
-				.append(".equals(that.").append(javaColumnName).append(") : that.").append(javaColumnName).append(" != null) return false;").append(NEWLINE);;				
+				.append(".equals(that.").append(javaColumnName).append(") : that.").append(javaColumnName).append(" != null) return false;").append(NEWLINE);
 			}else {
-				resultSb.append(TAB).append(TAB).append("return (").append(javaColumnName).append(" != null ? !").append(javaColumnName)
-				.append(".equals(that.").append(javaColumnName).append(") : that.").append(javaColumnName).append(" != null);").append(NEWLINE);
+				resultSb.append(TAB).append(TAB).append("if (").append(javaColumnName).append(" != null ? !").append(javaColumnName)
+				.append(".equals(that.").append(javaColumnName).append(") : that.").append(javaColumnName).append(" != null) return false;").append(NEWLINE)
+				.append(TAB).append(TAB).append("return true;").append(NEWLINE);
 			}
 		}
 		resultSb.append(TAB).append("}"); //equals end
