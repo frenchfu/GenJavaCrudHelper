@@ -21,7 +21,7 @@ public class FrenchMappingValueRuleUtil {
 		
 	}
 	
-	final static String  EMPTY_STR = "\"\"";
+	final static String  EMPTY_STR = "\" \"";
 	final static String  NULL = "null";
 	final static String  SYSTEM_DAY  = "LocalDateTime.now()";
 	final static String  ZERO  = "BigDecimal.ZERO";
