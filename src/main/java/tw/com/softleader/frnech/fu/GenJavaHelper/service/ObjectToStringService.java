@@ -1174,7 +1174,7 @@ public class ObjectToStringService {
 		resultSb.append("import java.time.LocalDateTime;").append(NEWLINE);
 		resultSb.append("import java.util.List;").append(NEWLINE);
 		resultSb.append("import java.util.Map;").append(NEWLINE);
-		resultSb.append("import tw.com.softleader.jasmine.integration.finance.converter.LocalDateTimeConverter;").append(NEWLINE);
+		resultSb.append("import tw.com.softleader.jasmine.integration.common.converter.LocalDateTimeConverter;").append(NEWLINE);
 		resultSb.append("import javax.persistence.Convert;").append(NEWLINE);
 		
 		
