@@ -6,11 +6,44 @@ public class ${entityClassName}Service {
 	public ${entityClassName} getOne(${entityClassName}Identity id ) {
 		return dao.findOne(id);
 	}
+	public ${entityClassName} insert(${entityClassName} entity) throws Exception{
+		if(dao.findOne(entity.get${entityClassName}Identity())!=null){
+				throw new Exception("寫入失敗 資料已存在  INSERT FAIL DATA AREADY EXISTS");
+		}
+		return dao.save(entity);
+	}
+	public ${entityClassName} update(${entityClassName} entity) throws Exception{
+		if(dao.findOne(entity.get${entityClassName}Identity())==null){
+				throw new Exception("更新失敗 資料不存在  UPDATE FAIL DATA NOT EXISTS");
+		}
+		return dao.save(entity);
+	}
 	public ${entityClassName} save(${entityClassName} entity){
 		return dao.save(entity);
 	}
 	public void delete(${entityClassName} entity){
 		dao.delete(entity);
+	}
+	public List<${entityClassName}> insertList(List<${entityClassName}> entitys) throws Exception{
+		List<${entityClassName}> resultList = new ArrayList();		
+		for(${entityClassName} entity : entitys){
+			resultList.add(this.insert(entity));
+		}
+		return resultList;
+	}
+	public List<${entityClassName}> updateList(List<${entityClassName}> entitys) throws Exception{
+		List<${entityClassName}> resultList = new ArrayList();		
+		for(${entityClassName} entity : entitys){
+			resultList.add(this.update(entity));
+		}
+		return resultList;
+	}	
+	public List<${entityClassName}> saveList(List<${entityClassName}> entitys){
+		List<${entityClassName}> resultList = new ArrayList();		
+		for(${entityClassName} entity : entitys){
+			resultList.add(dao.save(entity));
+		}
+		return resultList;
 	}
 
 }

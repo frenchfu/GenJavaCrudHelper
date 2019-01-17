@@ -274,6 +274,7 @@ public class ObjectToStringService {
 		
 		//define
 		String entityClassName  = getJavaNameFromTableName2(tableDetail.getTableName(),IS_ENTITY);
+		String identityClassName  = getJavaNameFromTableName2(tableDetail.getTableName(),IS_IDENTITY);
 		String tableName = tableDetail.getTableName();
 		String serviceClassName2 = BeanHump.underlineToCamel2(tableDetail.getTableName().toLowerCase()) + "Service";
 		String templete = FrenchFileUtils.loadFileToStirng(TEMPLETE_FOLDER_PATH+WEB_CONTROLLER_GET_METHOD_TEMPLETE_FILENAME);
@@ -283,6 +284,7 @@ public class ObjectToStringService {
 		keyValueMap.put("${entityClassName}", entityClassName);
 		keyValueMap.put("${tableName}", tableName);
 		keyValueMap.put("${serviceClassName2}", serviceClassName2);
+		keyValueMap.put("${identityClassName}", identityClassName);
 		
 		resultSb.append(FrenchTempleteUtils.templeteReplaceByKeyValueMapLogic(templete, keyValueMap));		
 
@@ -299,6 +301,8 @@ public class ObjectToStringService {
 		resultSb.append("import ").append(settingFromOds.getPackageToService()).append(".*;").append(NEWLINE);
 		//entity
 		resultSb.append("import ").append(settingFromOds.getPackageToEntity()).append(".*;").append(NEWLINE);
+		//identity
+		resultSb.append("import ").append(settingFromOds.getPackageToEntity()).append(".identity.*;").append(NEWLINE);
 		
 		//common part
 		resultSb.append("import org.springframework.beans.factory.annotation.Autowired;").append(NEWLINE);
@@ -385,6 +389,8 @@ public class ObjectToStringService {
 		//import part
 		importPartSb.append("import org.springframework.beans.factory.annotation.Autowired;").append(NEWLINE);
 		importPartSb.append("import org.springframework.stereotype.Service;").append(NEWLINE);
+		importPartSb.append("import java.util.List;").append(NEWLINE);
+		importPartSb.append("import java.util.ArrayList;").append(NEWLINE);
 		importPartSb.append("import ").append(settingFromOds.getPackageToDao()).append(".").append(className).append("Dao;").append(NEWLINE);
 		importPartSb.append("import ").append(settingFromOds.getPackageToEntity()).append(".").append(className).append(";").append(NEWLINE);
 		importPartSb.append("import ").append(settingFromOds.getPackageToEntity()).append(".identity.").append(className).append("Identity;").append(NEWLINE);

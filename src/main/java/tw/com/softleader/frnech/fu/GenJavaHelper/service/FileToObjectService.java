@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.odftoolkit.simple.SpreadsheetDocument;
 import org.odftoolkit.simple.table.Cell;
 import org.odftoolkit.simple.table.Row;
@@ -113,11 +114,15 @@ public class FileToObjectService {
 		for(Table table : tableList) 
 			{
 				if(!skipBookmark.contains(table.getTableName())) {
+					System.out.println(table.getTableName());
+					if("AO_CRD_AUTH_LOG".equals(table.getTableName())) {
+						System.out.println(table.getTableName());
+					}
 					resultModelTableDetails.add(scanOdtTableToTableDetail(table));
 				}
 				
 			}
-		
+		System.out.println("outlll");
 		return resultModelTableDetails;
 	}
 	
@@ -139,18 +144,27 @@ public class FileToObjectService {
 			
 				ColumnDetail columnDetail = new ColumnDetail();
 				Row row = odtTable.getRowByIndex(i);
-				
+				boolean needBreak = false;
 				int cellCounter = row.getCellCount();
-				for(int k = 1 ;k < cellCounter ; k++   ) 
+				for(int k = 1 ;k < cellCounter &&  k < 18; k++   ) 
 					{
 					
 						String beanName = columnsAttributesMap.get(k);
 						Cell cell = row.getCellByIndex(k);
 						String strValue = cell.getStringValue();
+						System.out.println("---------"+TABLE_NAME+" "+k);
+						System.out.println("---------"+strValue+":"+i);
+						System.out.println("---------"+StringUtils.trimToEmpty(strValue).equals(""));
+						if(StringUtils.trimToEmpty(strValue).equals("") && k==1) {
+							needBreak = true;
+							break;
+						}
 						BeanUtils.setProperty(columnDetail, beanName, strValue);	
 						
 					}
-				
+				if(needBreak) {
+					break;
+				}
 				resultModelTableDetail.getColumnDetails().add(columnDetail);
 				
 			}
@@ -169,10 +183,13 @@ public class FileToObjectService {
 		
 		Map<Integer, String> resultMap;
 		resultMap = Maps.newHashMap();
-		
+		if(1==1) {
+			System.out.println("11");
+		}
 		int cellCounter = rowByIndex.getCellCount();		
-		for(int i = 0 ;i < cellCounter ; i++   ) 
+		for(int i = 0 ;i < cellCounter && i < 18; i++   ) 
 			{
+				System.out.println(i+"cellCounter"+cellCounter);
 				resultMap.put(i, rowByIndex.getCellByIndex(i).getStringValue());	
 			}
 		

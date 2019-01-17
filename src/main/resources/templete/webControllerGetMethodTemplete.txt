@@ -1,6 +1,6 @@
 	/** get  ${entityClassName} */
 	@GetMapping(CRUD_${tableName})
-	public ResponseEntity<ResponseDetails<AoPlyedrPrem>> get${entityClassName}(@RequestBody  ${entityClassName} requestObj) {
+	public ResponseEntity<ResponseDetails<${entityClassName}>> get${entityClassName}(@RequestBody  ${identityClassName} requestObj) {
 
 		// start log
 		log.info("===get${entityClassName} : ");
@@ -10,7 +10,7 @@
 		${entityClassName} resultObj = null;
 		
 		//get
-		resultObj = ${serviceClassName2}.getOne(requestObj.get${entityClassName}Identity());
+		resultObj = ${serviceClassName2}.getOne(requestObj);
 
 		if(resultObj == null) {
 			log.info("get${entityClassName} ==========DATA_NOT_FOUND");

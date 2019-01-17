@@ -51,7 +51,7 @@ public class TableExcelGenJavaCodeBs {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String filePath = "C:\\gitbox\\jasmine\\softleader-jasmine-integration-rpc\\docs\\integration\\ahIntegrationGenTable.ods";
+		String filePath = "C:\\gitbox\\ZFjasme\\softleader-jasmine-integration-rpc\\docs\\integration\\ahIntegrationGenTable.ods";
 		InputStream inputStrem = new FileInputStream(filePath);
 		//InputStream inputStrem = new FileInputStream("C:\\gitbox\\fbg\\softleader-gardenia-integration-rpc\\docs\\fbgGenTable.ods");
 		
